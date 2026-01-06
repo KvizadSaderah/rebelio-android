@@ -36,3 +36,7 @@ captures/
 
 # Google Services (if applicable later)
 google-services.json
+
+# Keystore
+*.jks
+keystore.properties
