@@ -1,0 +1,38 @@
+# Gradle files
+.gradle/
+build/
+app/build/
+
+# Local configuration file (sdk.dir is here)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Android NDK native build output
+.cxx/
+.externalNativeBuild/
+
+# Signing / Keys (Keep secrets out of git!)
+*.jks
+*.keystore
+*.p12
+signing.properties
+key.properties
+
+# Output executables
+*.apk
+*.aab
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Captures / Profiling
+captures/
+
+# Google Services (if applicable later)
+google-services.json
