@@ -41,7 +41,8 @@ class RebelioRepository(private val storagePath: String) {
                     sender = sender,
                     content = msgObj.optString("content"),
                     timestamp = msgObj.optLong("timestamp"),
-                    isEncrypted = msgObj.optBoolean("is_encrypted")
+                    isEncrypted = msgObj.optBoolean("is_encrypted"),
+                    status = msgObj.optString("status", "sent")
                 ))
             }
         }
