@@ -1206,7 +1206,8 @@ data class FfiMessage (
     var `sender`: kotlin.String, 
     var `content`: kotlin.String, 
     var `timestamp`: kotlin.Long, 
-    var `isEncrypted`: kotlin.Boolean
+    var `isEncrypted`: kotlin.Boolean, 
+    var `status`: kotlin.String
 ) {
     
     companion object
@@ -1223,6 +1224,7 @@ public object FfiConverterTypeFfiMessage: FfiConverterRustBuffer<FfiMessage> {
             FfiConverterString.read(buf),
             FfiConverterLong.read(buf),
             FfiConverterBoolean.read(buf),
+            FfiConverterString.read(buf),
         )
     }
 
@@ -1231,7 +1233,8 @@ public object FfiConverterTypeFfiMessage: FfiConverterRustBuffer<FfiMessage> {
             FfiConverterString.allocationSize(value.`sender`) +
             FfiConverterString.allocationSize(value.`content`) +
             FfiConverterLong.allocationSize(value.`timestamp`) +
-            FfiConverterBoolean.allocationSize(value.`isEncrypted`)
+            FfiConverterBoolean.allocationSize(value.`isEncrypted`) +
+            FfiConverterString.allocationSize(value.`status`)
     )
 
     override fun write(value: FfiMessage, buf: ByteBuffer) {
@@ -1240,6 +1243,7 @@ public object FfiConverterTypeFfiMessage: FfiConverterRustBuffer<FfiMessage> {
             FfiConverterString.write(value.`content`, buf)
             FfiConverterLong.write(value.`timestamp`, buf)
             FfiConverterBoolean.write(value.`isEncrypted`, buf)
+            FfiConverterString.write(value.`status`, buf)
     }
 }
 
