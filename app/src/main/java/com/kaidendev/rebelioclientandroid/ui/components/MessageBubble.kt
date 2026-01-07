@@ -71,9 +71,7 @@ fun MessageBubble(
             )
             if (isMe) {
                 Spacer(Modifier.width(4.dp))
-                // TODO: Use message.status after UniFFI bindings regeneration
-                // For now, always show "sent" status
-                MessageStatusIcon(status = "sent")
+                MessageStatusIcon(status = message.status)
             }
         }
     }
