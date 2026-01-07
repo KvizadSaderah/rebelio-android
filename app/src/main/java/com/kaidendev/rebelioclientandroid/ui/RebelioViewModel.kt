@@ -264,8 +264,8 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                         sender = "me:$recipientToken", // Track recipient for proper chat filtering
                         content = message,
                         timestamp = System.currentTimeMillis() / 1000,
-                        isEncrypted = true
-                        // status field will be available after UniFFI bindings regeneration
+                        isEncrypted = true,
+                        status = "sent"
                     )
                     
                     sentMessages.add(sentMessage)
