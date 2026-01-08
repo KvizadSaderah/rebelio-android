@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # Semantic versions only
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -32,7 +32,6 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
-    # Build APK on every push to main (not just tags)
     
     permissions:
       contents: write
@@ -49,15 +48,6 @@ jobs:
     
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-
-    - name: Diagnostics - Check Environment
-      run: |
-        ./gradlew --version
-        echo "PWD: $(pwd)"
-        echo "Listing uniffi bindings:"
-        ls -R app/src/main/java/uniffi || echo "uniffi dir not found"
-        echo "Listing JNI libs:"
-        ls -R app/src/main/jniLibs || echo "jniLibs dir not found"
     
     - name: Decode keystore
       run: |
@@ -71,17 +61,43 @@ jobs:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     
-    - name: Upload Signed Release APK (Artifact)
+    - name: Get version from tag
+      id: version
+      if: startsWith(github.ref, 'refs/tags/')
+      run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Rename APK with version
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        mv app/build/outputs/apk/release/app-release.apk \
+           app/build/outputs/apk/release/rebelio-${{ steps.version.outputs.version }}.apk
+    
+    # Upload as artifact for non-tag builds (dev/PR)
+    - name: Upload APK (dev artifact)
+      if: "!startsWith(github.ref, 'refs/tags/')"
       uses: actions/upload-artifact@v4
       with:
         name: app-release-${{ github.sha }}
         path: app/build/outputs/apk/release/app-release.apk
         retention-days: 7
 
-    - name: Create Release
+    # Create GitHub Release for version tags
+    - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: app/build/outputs/apk/release/app-release.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Rebelio ${{ steps.version.outputs.version }}
+        body: |
+          ## Rebelio ${{ steps.version.outputs.version }}
+          
+          ### Download
+          - **APK**: `rebelio-${{ steps.version.outputs.version }}.apk`
+          
+          ### Installation
+          1. Download the APK file
+          2. Enable "Install from unknown sources" on your Android device
+          3. Install the APK
+        files: |
+          app/build/outputs/apk/release/rebelio-${{ steps.version.outputs.version }}.apk
+        draft: false
+        prerelease: false
