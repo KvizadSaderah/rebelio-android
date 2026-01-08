@@ -743,6 +743,14 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -764,7 +772,11 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_export_identity(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_rebelio_client_fn_func_get_all_messages(uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_get_inbox_messages(uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_rebelio_client_fn_func_get_messages(`counterparty`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_get_sent_message_statuses(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -787,6 +799,10 @@ internal interface UniffiLib : Library {
     fun uniffi_rebelio_client_fn_func_send_group_message(`groupId`: RustBuffer.ByValue,`messageText`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_rebelio_client_fn_func_send_message(`recipientToken`: RustBuffer.ByValue,`messageText`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_rebelio_client_fn_func_start_realtime_messaging(uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_rebelio_client_fn_func_stop_realtime_messaging(uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_rebelio_client_fn_func_trust_identity(`counterparty`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -908,7 +924,11 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_rebelio_client_checksum_func_export_identity(
     ): Short
+    fun uniffi_rebelio_client_checksum_func_get_all_messages(
+    ): Short
     fun uniffi_rebelio_client_checksum_func_get_inbox_messages(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_get_messages(
     ): Short
     fun uniffi_rebelio_client_checksum_func_get_sent_message_statuses(
     ): Short
@@ -931,6 +951,10 @@ internal interface UniffiLib : Library {
     fun uniffi_rebelio_client_checksum_func_send_group_message(
     ): Short
     fun uniffi_rebelio_client_checksum_func_send_message(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_start_realtime_messaging(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_stop_realtime_messaging(
     ): Short
     fun uniffi_rebelio_client_checksum_func_trust_identity(
     ): Short
@@ -960,7 +984,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_rebelio_client_checksum_func_export_identity() != 14521.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_rebelio_client_checksum_func_get_all_messages() != 46046.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_rebelio_client_checksum_func_get_inbox_messages() != 53884.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_get_messages() != 27908.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_get_sent_message_statuses() != 35239.toShort()) {
@@ -994,6 +1024,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_send_message() != 35087.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_start_realtime_messaging() != 56847.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_stop_realtime_messaging() != 61114.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_trust_identity() != 450.toShort()) {
@@ -1728,6 +1764,20 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     
 
         /**
+         * Get all messages from all chats (flat list)
+         * Use this to load history at startup
+         */
+    @Throws(RebelioException::class) fun `getAllMessages`(): List<FfiMessage> {
+            return FfiConverterSequenceTypeFfiMessage.lift(
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_get_all_messages(
+        _status)
+}
+    )
+    }
+    
+
+        /**
          * Get inbox messages
          */
     @Throws(RebelioException::class) fun `getInboxMessages`(): List<FfiMessage> {
@@ -1735,6 +1785,19 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     uniffiRustCallWithError(RebelioException) { _status ->
     UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_get_inbox_messages(
         _status)
+}
+    )
+    }
+    
+
+        /**
+         * Get messages for a specific contact (from encrypted storage)
+         */
+    @Throws(RebelioException::class) fun `getMessages`(`counterparty`: kotlin.String): List<FfiMessage> {
+            return FfiConverterSequenceTypeFfiMessage.lift(
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_get_messages(
+        FfiConverterString.lower(`counterparty`),_status)
 }
     )
     }
@@ -1875,6 +1938,31 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     uniffiRustCallWithError(RebelioException) { _status ->
     UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_send_message(
         FfiConverterString.lower(`recipientToken`),FfiConverterString.lower(`messageText`),_status)
+}
+    
+    
+
+        /**
+         * Start real-time messaging service (WebSocket)
+         * Call this after login/register to start receiving messages instantly
+         */
+    @Throws(RebelioException::class) fun `startRealtimeMessaging`()
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_start_realtime_messaging(
+        _status)
+}
+    
+    
+
+        /**
+         * Stop real-time messaging service
+         * Call this on logout or app background (if desired)
+         */ fun `stopRealtimeMessaging`()
+        = 
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_stop_realtime_messaging(
+        _status)
 }
     
     
