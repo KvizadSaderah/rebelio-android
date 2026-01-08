@@ -41,7 +41,7 @@ jobs:
     - name: Determine target version
       id: target
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.CLIENT_LIB_TOKEN }}
       run: |
         if [ -n "${{ github.event.inputs.version }}" ]; then
           VERSION="${{ github.event.inputs.version }}"
@@ -94,7 +94,7 @@ jobs:
     
     - name: Download release artifacts
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.CLIENT_LIB_TOKEN }}
       run: |
         VERSION="${{ steps.target.outputs.version }}"
         
