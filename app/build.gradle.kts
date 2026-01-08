@@ -6,16 +6,16 @@ plugins {
 
 android {
     namespace = "com.kaidendev.rebelioclientandroid"
-    compileSdk = 36
-    buildToolsVersion = "36.0.0"
+    compileSdk = 35
+    buildToolsVersion = "35.0.0"
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
         applicationId = "com.kaidendev.rebelioclientandroid"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
