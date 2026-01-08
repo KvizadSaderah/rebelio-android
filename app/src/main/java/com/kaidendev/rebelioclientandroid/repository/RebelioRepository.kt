@@ -34,7 +34,9 @@ class RebelioRepository(private val storagePath: String) {
             for (i in 0 until msgsArray.length()) {
                 val msgObj = msgsArray.getJSONObject(i)
                 val isOutgoing = msgObj.optBoolean("is_outgoing")
-                val sender = if (isOutgoing) "me" else msgObj.optString("sender")
+                // For outgoing messages, use "me:routingToken" so we know which chat it belongs to
+                // For incoming messages, use the actual sender routing token
+                val sender = if (isOutgoing) "me:$routingToken" else msgObj.optString("sender", routingToken)
                 
                 allMessages.add(FfiMessage(
                     id = msgObj.optString("id"),

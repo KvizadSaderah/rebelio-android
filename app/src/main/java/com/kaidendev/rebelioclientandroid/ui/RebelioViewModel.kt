@@ -87,10 +87,26 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 repository.loadLocalHistory()
             }
             
-            // Add history first
+            // Separate outgoing and incoming messages from history
+            // This is critical for status sync to work correctly!
             historyMessages.forEach { msg ->
-                if (receivedMessages.none { it.id == msg.id }) {
-                    receivedMessages.add(msg)
+                val isOutgoing = msg.sender == "You" || msg.sender.startsWith("me")
+                if (isOutgoing) {
+                    // Outgoing messages go to sentMessages for status sync
+                    if (sentMessages.none { it.id == msg.id }) {
+                        sentMessages.add(msg)
+                    } else {
+                        // Update existing message status if it changed
+                        val idx = sentMessages.indexOfFirst { it.id == msg.id }
+                        if (idx >= 0 && sentMessages[idx].status != msg.status) {
+                            sentMessages[idx] = msg
+                        }
+                    }
+                } else {
+                    // Incoming messages go to receivedMessages
+                    if (receivedMessages.none { it.id == msg.id }) {
+                        receivedMessages.add(msg)
+                    }
                 }
             }
 
