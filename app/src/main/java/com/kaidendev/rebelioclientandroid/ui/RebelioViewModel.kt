@@ -238,8 +238,53 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                             )
                         }
                     }
+                    
+                    // Sync status updates for sent messages
+                    syncSentMessageStatuses()
                 }
                 kotlinx.coroutines.delay(2000) // Poll every 2 seconds
+            }
+        }
+    }
+    
+    /**
+     * Sync status updates for sent messages from local history
+     * This updates the checkmarks: sent → delivered → read
+     */
+    private fun syncSentMessageStatuses() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val updates = uniffi.rebelio_client.getSentMessageStatuses()
+                var changed = false
+                
+                updates.forEach { update ->
+                    val idx = sentMessages.indexOfFirst { it.id == update.messageId }
+                    if (idx >= 0 && sentMessages[idx].status != update.status) {
+                        val msg = sentMessages[idx]
+                        sentMessages[idx] = uniffi.rebelio_client.FfiMessage(
+                            id = msg.id,
+                            sender = msg.sender,
+                            content = msg.content,
+                            timestamp = msg.timestamp,
+                            isEncrypted = msg.isEncrypted,
+                            status = update.status
+                        )
+                        changed = true
+                        println("Rebelio: Message ${msg.id} status: ${msg.status} → ${update.status}")
+                    }
+                }
+                
+                if (changed) {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        val allMessages = receivedMessages + sentMessages
+                        _uiState.value = _uiState.value.copy(
+                            messages = allMessages.sortedBy { it.timestamp }
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // Silent fail - status sync is non-critical
+                println("Rebelio: Status sync failed: ${e.message}")
             }
         }
     }
@@ -289,8 +334,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
     }
 
     /**
-     * Mark messages as read - clears unread count
-     * TODO: Send read receipts to server after UniFFI bindings regeneration
+     * Mark messages as read - clears unread count and sends read receipts to server
      */
     fun markAsRead(contactId: String) {
         // Clear local unread count
@@ -300,14 +344,19 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
             _uiState.value = _uiState.value.copy(unreadCounts = currentCounts)
         }
         
-        // TODO: Uncomment after UniFFI bindings regeneration:
-        // viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-        //     val messageIds = receivedMessages.filter { it.sender == contactId }.map { it.id }
-        //     val myToken = _uiState.value.myRoutingToken
-        //     if (messageIds.isNotEmpty() && myToken != null) {
-        //         uniffi.rebelio_client.markMessagesRead(messageIds, myToken)
-        //     }
-        // }
+        // Send read receipts to server
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val messageIds = receivedMessages.filter { it.sender == contactId }.map { it.id }
+            val myToken = _uiState.value.myRoutingToken
+            if (messageIds.isNotEmpty() && myToken != null) {
+                try {
+                    uniffi.rebelio_client.markMessagesRead(messageIds, myToken)
+                    println("Rebelio: Sent read receipts for ${messageIds.size} messages")
+                } catch (e: Exception) {
+                    println("Rebelio: Failed to send read receipts: ${e.message}")
+                }
+            }
+        }
     }
 
     fun clearHistory() {
