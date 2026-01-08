@@ -96,6 +96,10 @@ dependencies {
     
     // QR Code (ZXing)
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    
+    // OkHttp for auto-update check
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
