@@ -737,6 +737,10 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -760,6 +764,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_get_inbox_messages(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_rebelio_client_fn_func_get_sent_message_statuses(uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_get_status(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_import_identity(`json`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -770,6 +776,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_load_groups(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_rebelio_client_fn_func_mark_messages_read(`messageIds`: RustBuffer.ByValue,`routingToken`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_rebelio_client_fn_func_register_user(`username`: RustBuffer.ByValue,`serverUrl`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_remove_contact(`nickname`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -898,6 +906,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_rebelio_client_checksum_func_get_inbox_messages(
     ): Short
+    fun uniffi_rebelio_client_checksum_func_get_sent_message_statuses(
+    ): Short
     fun uniffi_rebelio_client_checksum_func_get_status(
     ): Short
     fun uniffi_rebelio_client_checksum_func_import_identity(
@@ -907,6 +917,8 @@ internal interface UniffiLib : Library {
     fun uniffi_rebelio_client_checksum_func_load_contacts(
     ): Short
     fun uniffi_rebelio_client_checksum_func_load_groups(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_mark_messages_read(
     ): Short
     fun uniffi_rebelio_client_checksum_func_register_user(
     ): Short
@@ -945,6 +957,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_rebelio_client_checksum_func_get_inbox_messages() != 53884.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_rebelio_client_checksum_func_get_sent_message_statuses() != 35239.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_rebelio_client_checksum_func_get_status() != 59707.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -958,6 +973,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_load_groups() != 42684.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_mark_messages_read() != 21495.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_register_user() != 35952.toShort()) {
@@ -1292,6 +1310,45 @@ public object FfiConverterTypeFfiStatus: FfiConverterRustBuffer<FfiStatus> {
 
 
 
+/**
+ * FFI-safe status update for message delivery/read receipts
+ */
+data class FfiStatusUpdate (
+    var `messageId`: kotlin.String, 
+    var `status`: kotlin.String, 
+    var `timestamp`: kotlin.Long
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiStatusUpdate: FfiConverterRustBuffer<FfiStatusUpdate> {
+    override fun read(buf: ByteBuffer): FfiStatusUpdate {
+        return FfiStatusUpdate(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterLong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FfiStatusUpdate) = (
+            FfiConverterString.allocationSize(value.`messageId`) +
+            FfiConverterString.allocationSize(value.`status`) +
+            FfiConverterLong.allocationSize(value.`timestamp`)
+    )
+
+    override fun write(value: FfiStatusUpdate, buf: ByteBuffer) {
+            FfiConverterString.write(value.`messageId`, buf)
+            FfiConverterString.write(value.`status`, buf)
+            FfiConverterLong.write(value.`timestamp`, buf)
+    }
+}
+
+
+
 
 
 /**
@@ -1594,6 +1651,34 @@ public object FfiConverterSequenceTypeFfiMessage: FfiConverterRustBuffer<List<Ff
         }
     }
 }
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<List<FfiStatusUpdate>> {
+    override fun read(buf: ByteBuffer): List<FfiStatusUpdate> {
+        val len = buf.getInt()
+        return List<FfiStatusUpdate>(len) {
+            FfiConverterTypeFfiStatusUpdate.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<FfiStatusUpdate>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeFfiStatusUpdate.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<FfiStatusUpdate>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeFfiStatusUpdate.write(it, buf)
+        }
+    }
+}
         /**
          * Add a contact
          */
@@ -1640,6 +1725,20 @@ public object FfiConverterSequenceTypeFfiMessage: FfiConverterRustBuffer<List<Ff
             return FfiConverterSequenceTypeFfiMessage.lift(
     uniffiRustCallWithError(RebelioException) { _status ->
     UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_get_inbox_messages(
+        _status)
+}
+    )
+    }
+    
+
+        /**
+         * Get statuses of sent messages from local history
+         * Use this for polling-based status sync on Android
+         */
+    @Throws(RebelioException::class) fun `getSentMessageStatuses`(): List<FfiStatusUpdate> {
+            return FfiConverterSequenceTypeFfiStatusUpdate.lift(
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_get_sent_message_statuses(
         _status)
 }
     )
@@ -1708,6 +1807,18 @@ public object FfiConverterSequenceTypeFfiMessage: FfiConverterRustBuffer<List<Ff
 }
     )
     }
+    
+
+        /**
+         * Mark messages as read and send read receipts to the server
+         */
+    @Throws(RebelioException::class) fun `markMessagesRead`(`messageIds`: List<kotlin.String>, `routingToken`: kotlin.String)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_mark_messages_read(
+        FfiConverterSequenceString.lower(`messageIds`),FfiConverterString.lower(`routingToken`),_status)
+}
+    
     
 
         /**
