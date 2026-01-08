@@ -167,7 +167,7 @@ jobs:
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.CLIENT_LIB_TOKEN }}
         commit-message: "chore: update native libraries to ${{ steps.target.outputs.version }}"
         branch: update-libs/${{ steps.target.outputs.version }}
         delete-branch: true
