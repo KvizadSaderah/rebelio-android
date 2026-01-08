@@ -22,9 +22,7 @@ class RebelioRepository(private val storagePath: String) {
     // to get the latest bindings from client-lib
     fun loadLocalHistory(): List<FfiMessage> {
         return try {
-            // TODO: Enable after bindings update
-            // uniffi.rebelio_client.getAllMessages()
-            emptyList() // Temporary: return empty until bindings updated
+            uniffi.rebelio_client.getAllMessages()
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
