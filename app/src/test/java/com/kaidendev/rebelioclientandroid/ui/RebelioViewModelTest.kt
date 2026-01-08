@@ -59,13 +59,13 @@ class RebelioViewModelTest {
         
         // Mock successful send
         coEvery { repository.sendMessage(recipientToken, messageText) } returns Result.success(Unit)
-        
-        // sendMessage also calls loadData internally (via onSuccess)
-        // Wait, I removed loadData from sendMessage success in previous edits! 
-        // But let's check RebelioViewModel.kt source to be sure. 
-        // Checked: sendMessage updates _uiState directly.
+        // Mock loadLocalHistory (called after send to get correct message ID)
+        coEvery { repository.loadLocalHistory() } returns emptyList()
         
         viewModel.sendMessage(recipientToken, messageText)
+        
+        // Wait for coroutine to complete
+        advanceUntilIdle()
         
         // Verify UI state contains the sent message
         val state = viewModel.uiState.value
