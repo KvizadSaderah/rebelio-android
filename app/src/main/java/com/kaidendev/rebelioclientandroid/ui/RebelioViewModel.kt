@@ -208,11 +208,15 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
     private fun startRealtimeMessaging() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                println("Rebelio: Starting WebSocket...")
-                uniffi.rebelio_client.startRealtimeMessaging()
+                println("Rebelio: Starting messaging service...")
+                // TODO: Enable after bindings update via update-libs workflow
+                // uniffi.rebelio_client.startRealtimeMessaging()
+                // For now, use polling-only mode
                 startLocalRefresh()
             } catch (e: Exception) {
-                println("Rebelio: Failed to start realtime messaging: ${e.message}")
+                println("Rebelio: Failed to start messaging: ${e.message}")
+                // Fallback to polling-only
+                startLocalRefresh()
             }
         }
     }
@@ -227,6 +231,15 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 loadData()
                 kotlinx.coroutines.delay(2000) // Refresh UI every 2s
             }
+        }
+    }
+    
+    /**
+     * Public method to start auto-refresh when app becomes active
+     */
+    fun startAutoRefresh() {
+        if (_uiState.value.isRegistered) {
+            startLocalRefresh()
         }
     }
     
@@ -276,10 +289,6 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 println("Rebelio: Status sync failed: ${e.message}")
             }
         }
-    }
-    
-    fun stopPolling() {
-        isPolling = false
     }
 
     fun sendMessage(recipientToken: String, message: String) {
@@ -442,14 +451,10 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
              // Reset UI state
              _uiState.value = AppState() // Reset to default (isRegistered=false)
              
-             // Stop WebSocket
-             kotlinx.coroutines.Dispatchers.IO.let {
-                 try {
-                     uniffi.rebelio_client.stopRealtimeMessaging()
-                 } catch (e: Exception) {
-                     println("Rebelio: Failed to stop realtime messaging: ${e.message}")
-                 }
-             }
+             // Stop WebSocket (if available after bindings update)
+             // TODO: Enable after update-libs workflow
+             // uniffi.rebelio_client.stopRealtimeMessaging()
+             stopPolling()
         }
     }
 

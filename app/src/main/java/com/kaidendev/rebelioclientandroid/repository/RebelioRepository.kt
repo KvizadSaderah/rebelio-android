@@ -18,9 +18,13 @@ class RebelioRepository(private val storagePath: String) {
     // ... existing methods ...
 
     // Load all messages from encrypted database
+    // NOTE: getAllMessages will be available after running update-libs workflow
+    // to get the latest bindings from client-lib
     fun loadLocalHistory(): List<FfiMessage> {
         return try {
-            uniffi.rebelio_client.getAllMessages()
+            // TODO: Enable after bindings update
+            // uniffi.rebelio_client.getAllMessages()
+            emptyList() // Temporary: return empty until bindings updated
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
