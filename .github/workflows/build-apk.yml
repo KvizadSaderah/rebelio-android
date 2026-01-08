@@ -49,6 +49,15 @@ jobs:
     
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+
+    - name: Diagnostics - Check Environment
+      run: |
+        ./gradlew --version
+        echo "PWD: $(pwd)"
+        echo "Listing uniffi bindings:"
+        ls -R app/src/main/java/uniffi || echo "uniffi dir not found"
+        echo "Listing JNI libs:"
+        ls -R app/src/main/jniLibs || echo "jniLibs dir not found"
     
     - name: Decode keystore
       run: |
