@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "rebelio..client.android"
+rootProject.name = "rebelio-client-android"
 include(":app")
