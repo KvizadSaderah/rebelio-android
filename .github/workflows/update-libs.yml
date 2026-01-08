@@ -1,0 +1,206 @@
+name: Update Native Libraries
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to update to (e.g., v0.1.0). Leave empty for latest.'
+        required: false
+        default: ''
+      force:
+        description: 'Force update even if version is the same or older'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  CLIENT_LIB_REPO: KvizadSaderah/rebelio-client-lib
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Get current version
+      id: current
+      run: |
+        if [ -f libs-version.properties ]; then
+          CURRENT=$(grep CLIENT_LIB_VERSION= libs-version.properties | cut -d= -f2)
+        else
+          CURRENT="none"
+        fi
+        echo "version=$CURRENT" >> $GITHUB_OUTPUT
+        echo "📌 Current version: $CURRENT"
+    
+    - name: Determine target version
+      id: target
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+          echo "🎯 Using specified version: $VERSION"
+        else
+          # Get latest release
+          VERSION=$(gh release view --repo $CLIENT_LIB_REPO --json tagName -q .tagName)
+          echo "🎯 Using latest version: $VERSION"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Safety check - version comparison
+      if: ${{ github.event.inputs.force != 'true' }}
+      run: |
+        CURRENT="${{ steps.current.outputs.version }}"
+        TARGET="${{ steps.target.outputs.version }}"
+        
+        # Skip if same version
+        if [ "$CURRENT" = "$TARGET" ]; then
+          echo "::error::Already at version $TARGET. Use force=true to re-download."
+          exit 1
+        fi
+        
+        # Parse versions for comparison
+        parse_version() {
+          echo "$1" | sed 's/^v//' | tr '.' ' '
+        }
+        
+        read -r C_MAJOR C_MINOR C_PATCH <<< $(parse_version "$CURRENT")
+        read -r T_MAJOR T_MINOR T_PATCH <<< $(parse_version "$TARGET")
+        
+        # Default to 0 if parsing fails
+        C_MAJOR=${C_MAJOR:-0}
+        C_MINOR=${C_MINOR:-0}
+        C_PATCH=${C_PATCH:-0}
+        T_MAJOR=${T_MAJOR:-0}
+        T_MINOR=${T_MINOR:-0}
+        T_PATCH=${T_PATCH:-0}
+        
+        # Check for downgrade
+        if [ "$C_MAJOR" -gt "$T_MAJOR" ] || \
+           ([ "$C_MAJOR" -eq "$T_MAJOR" ] && [ "$C_MINOR" -gt "$T_MINOR" ]) || \
+           ([ "$C_MAJOR" -eq "$T_MAJOR" ] && [ "$C_MINOR" -eq "$T_MINOR" ] && [ "$C_PATCH" -gt "$T_PATCH" ]); then
+          echo "::warning::⚠️ DOWNGRADE detected: $CURRENT → $TARGET"
+          echo "If intentional, re-run with force=true"
+          exit 1
+        fi
+        
+        echo "✅ Updating: $CURRENT → $TARGET"
+    
+    - name: Download release artifacts
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ steps.target.outputs.version }}"
+        
+        echo "📥 Downloading $VERSION from $CLIENT_LIB_REPO..."
+        
+        # Create download directory
+        mkdir -p downloaded
+        
+        # Download release asset
+        gh release download "$VERSION" \
+          --repo $CLIENT_LIB_REPO \
+          --pattern 'android-libs-*.zip' \
+          --dir ./downloaded
+        
+        # Extract
+        mkdir -p extracted
+        unzip ./downloaded/android-libs-*.zip -d ./extracted
+        
+        echo "📦 Downloaded and extracted successfully"
+        ls -la extracted/
+    
+    - name: Update native libraries
+      run: |
+        # Remove old libs (but keep directory structure)
+        rm -rf app/src/main/jniLibs/arm64-v8a/*
+        rm -rf app/src/main/jniLibs/armeabi-v7a/*
+        rm -rf app/src/main/jniLibs/x86_64/*
+        rm -rf app/src/main/java/uniffi/*
+        
+        # Copy new libs
+        cp -r extracted/jniLibs/* app/src/main/jniLibs/
+        mkdir -p app/src/main/java/uniffi
+        cp -r extracted/kotlin/uniffi/* app/src/main/java/uniffi/
+        
+        # Update version file
+        cat > libs-version.properties << EOF
+        # Native library version from rebelio-client-lib
+        # This file is the source of truth for which version of native libs we're using
+        # Update via: gh workflow run update-libs.yml -f version=${{ steps.target.outputs.version }}
+        CLIENT_LIB_VERSION=${{ steps.target.outputs.version }}
+        EOF
+        
+        echo "✅ Libraries updated"
+    
+    - name: Verify libraries
+      run: |
+        echo "🔍 Verifying libraries..."
+        
+        # Check that .so files exist for all architectures
+        ARCHS="arm64-v8a armeabi-v7a x86_64"
+        for arch in $ARCHS; do
+          if [ ! -f "app/src/main/jniLibs/$arch/librebelio_client.so" ]; then
+            echo "::error::❌ Missing library for $arch"
+            exit 1
+          fi
+          SIZE=$(du -h "app/src/main/jniLibs/$arch/librebelio_client.so" | cut -f1)
+          echo "✓ $arch: librebelio_client.so ($SIZE)"
+        done
+        
+        # Check Kotlin bindings
+        if [ ! -f "app/src/main/java/uniffi/rebelio_client/rebelio_client.kt" ]; then
+          echo "::error::❌ Missing Kotlin bindings"
+          exit 1
+        fi
+        echo "✓ Kotlin bindings present"
+        
+        echo ""
+        echo "✅ All verifications passed!"
+    
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: update native libraries to ${{ steps.target.outputs.version }}"
+        branch: update-libs/${{ steps.target.outputs.version }}
+        delete-branch: true
+        title: "⬆️ Update native libraries to ${{ steps.target.outputs.version }}"
+        body: |
+          ## 📦 Native Library Update
+          
+          | | Version |
+          |---|---------|
+          | **From** | `${{ steps.current.outputs.version }}` |
+          | **To** | `${{ steps.target.outputs.version }}` |
+          
+          ### 📋 Changes
+          - Updated `librebelio_client.so` for all architectures (arm64-v8a, armeabi-v7a, x86_64)
+          - Updated Kotlin UniFFI bindings
+          
+          ### 🔗 Source
+          - [Release ${{ steps.target.outputs.version }}](https://github.com/${{ env.CLIENT_LIB_REPO }}/releases/tag/${{ steps.target.outputs.version }})
+          
+          ---
+          
+          ### ✅ Review Checklist
+          - [ ] Build passes
+          - [ ] Tests pass  
+          - [ ] No breaking API changes (or handled in code)
+        labels: |
+          dependencies
+          automated
+    
+    - name: Summary
+      run: |
+        echo "## Library Update Complete! 🎉" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**${{ steps.current.outputs.version }}** → **${{ steps.target.outputs.version }}**" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "A Pull Request has been created. Review and merge to apply the update." >> $GITHUB_STEP_SUMMARY
