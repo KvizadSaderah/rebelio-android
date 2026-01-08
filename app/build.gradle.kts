@@ -7,15 +7,14 @@ plugins {
 android {
     namespace = "com.kaidendev.rebelioclientandroid"
     compileSdk = 35
-    buildToolsVersion = "35.0.0"
-    ndkVersion = "27.0.12077973"
+    // Default buildTools and NDK versions managed by AGP
 
     defaultConfig {
         applicationId = "com.kaidendev.rebelioclientandroid"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = 2
+        versionName = "0.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
