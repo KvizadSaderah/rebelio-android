@@ -209,9 +209,8 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 println("Rebelio: Starting messaging service...")
-                // TODO: Enable after bindings update via update-libs workflow
-                // uniffi.rebelio_client.startRealtimeMessaging()
-                // For now, use polling-only mode
+                uniffi.rebelio_client.startRealtimeMessaging()
+                // Also start polling as backup/sync mechanism
                 startLocalRefresh()
             } catch (e: Exception) {
                 println("Rebelio: Failed to start messaging: ${e.message}")
@@ -451,9 +450,12 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
              // Reset UI state
              _uiState.value = AppState() // Reset to default (isRegistered=false)
              
-             // Stop WebSocket (if available after bindings update)
-             // TODO: Enable after update-libs workflow
-             // uniffi.rebelio_client.stopRealtimeMessaging()
+             // Stop WebSocket
+             try {
+                uniffi.rebelio_client.stopRealtimeMessaging()
+             } catch (e: Exception) {
+                // Ignore if not running
+             }
              stopPolling()
         }
     }
