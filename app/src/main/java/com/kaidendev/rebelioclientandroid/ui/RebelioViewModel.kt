@@ -25,7 +25,16 @@ data class AppState(
     val messages: List<FfiMessage> = emptyList(),
     val error: String? = null,
     val isLoading: Boolean = false,
-    val unreadCounts: Map<String, Int> = emptyMap()
+    val unreadCounts: Map<String, Int> = emptyMap(),
+    val identityChangeAlert: IdentityChangeAlert? = null
+)
+
+/**
+ * Alert shown when a contact's identity key has changed
+ */
+data class IdentityChangeAlert(
+    val contactId: String,
+    val contactName: String
 )
 
 class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() {
@@ -357,6 +366,46 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 }
             }
         }
+    }
+
+    /**
+     * Trust a contact's new identity key and reset session
+     * Call this when user confirms they trust the new identity
+     */
+    fun trustNewIdentity(contactId: String) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                uniffi.rebelio_client.trustIdentity(contactId)
+                println("Rebelio: Trusted new identity for $contactId")
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(identityChangeAlert = null)
+                }
+            } catch (e: Exception) {
+                println("Rebelio: Failed to trust identity: ${e.message}")
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        error = "Failed to trust identity: ${e.message}",
+                        identityChangeAlert = null
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Show identity change alert for a contact
+     */
+    fun showIdentityChangeAlert(contactId: String, contactName: String) {
+        _uiState.value = _uiState.value.copy(
+            identityChangeAlert = IdentityChangeAlert(contactId, contactName)
+        )
+    }
+
+    /**
+     * Dismiss identity change alert without trusting
+     */
+    fun dismissIdentityChangeAlert() {
+        _uiState.value = _uiState.value.copy(identityChangeAlert = null)
     }
 
     fun clearHistory() {
