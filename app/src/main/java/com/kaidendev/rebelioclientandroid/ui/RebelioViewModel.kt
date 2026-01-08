@@ -190,7 +190,21 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 println("Rebelio: Polling tick, isRegistered=${_uiState.value.isRegistered}")
                 if (_uiState.value.isRegistered) {
                     println("Rebelio: Fetching inbox messages...")
+                    println("Rebelio: Fetching inbox messages...")
                     val messagesResult = repository.getInboxMessages()
+                    
+                    messagesResult.onFailure { e ->
+                        println("Rebelio: Fetch message failed: ${e.message}")
+                        val msg = e.message ?: ""
+                        if (msg.contains("untrusted identity", ignoreCase = true)) {
+                            // Try to find which contact caused this
+                            val contact = _uiState.value.contacts.find { msg.contains(it.routingToken) }
+                            if (contact != null) {
+                                showIdentityChangeAlert(contact.routingToken, contact.nickname)
+                            }
+                        }
+                    }
+
                     println("Rebelio: Got ${messagesResult.getOrNull()?.size ?: "error"} messages")
                     val newInboxMessages = messagesResult.getOrDefault(emptyList())
                     
@@ -333,6 +347,11 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 }
                 .onFailure { e -> 
                     println("Rebelio: Failed to send: ${e.message}")
+                    val msg = e.message ?: ""
+                    if (msg.contains("untrusted identity", ignoreCase = true)) {
+                        val contact = _uiState.value.contacts.find { it.routingToken == recipientToken }
+                        showIdentityChangeAlert(recipientToken, contact?.nickname ?: "Unknown")
+                    }
                     _uiState.value = _uiState.value.copy(isLoading = false, error = e.message) 
                 }
         }
