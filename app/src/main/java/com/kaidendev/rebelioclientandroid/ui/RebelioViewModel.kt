@@ -63,6 +63,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 )
                 if (status.isRegistered) {
                     loadData()
+                    startRealtimeMessaging()
                 }
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
@@ -136,7 +137,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             val result = repository.registerUser(username, serverUrl)
             result.onSuccess {
-                refreshStatus()
+                refreshStatus() // will call startRealtimeMessaging()
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -194,7 +195,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
         }
     }
 
-    // Polling mechanism
+    // Local polling mechanism (reads from disk, updated by WebSocket in background)
     private var isPolling = false
     
     // Track which conversation is currently open (for notification suppression)
@@ -203,104 +204,36 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
     fun setViewingContact(contactId: String?) {
         currentlyViewingContact = contactId
     }
-    
-    fun startAutoRefresh() {
-        if (isPolling) return
-        isPolling = true
-        println("Rebelio: Polling started")
-        viewModelScope.launch {
-            while (isPolling) {
-                println("Rebelio: Polling tick, isRegistered=${_uiState.value.isRegistered}")
-                if (_uiState.value.isRegistered) {
-                    println("Rebelio: Fetching inbox messages...")
-                    println("Rebelio: Fetching inbox messages...")
-                    val messagesResult = repository.getInboxMessages()
-                    
-                    messagesResult.onFailure { e ->
-                        println("Rebelio: Fetch message failed: ${e.message}")
-                        val msg = e.message ?: ""
-                        if (msg.contains("untrusted identity", ignoreCase = true)) {
-                            // Try to find which contact caused this
-                            val contact = _uiState.value.contacts.find { msg.contains(it.routingToken) }
-                            if (contact != null) {
-                                showIdentityChangeAlert(contact.routingToken, contact.nickname)
-                            }
-                        }
-                    }
 
-                    println("Rebelio: Got ${messagesResult.getOrNull()?.size ?: "error"} messages")
-                    val newInboxMessages = messagesResult.getOrDefault(emptyList())
-                    
-                    if (newInboxMessages.isNotEmpty()) {
-                        var changed = false
-                        val currentContacts = _uiState.value.contacts.toMutableList()
-                        var newUnreadCounts = _uiState.value.unreadCounts.toMutableMap()
-                        
-                        newInboxMessages.forEach { newMsg ->
-                            println("Rebelio: New message from '${newMsg.sender}': ${newMsg.content}")
-                            
-                            // Check for decryption failure (untrusted identity) reported as message content
-                            if (newMsg.content.contains("Decryption Failed", ignoreCase = true) && 
-                                newMsg.content.contains("untrusted identity", ignoreCase = true)) {
-                                val contactName = _uiState.value.contacts.find { it.routingToken == newMsg.sender }?.nickname ?: "Unknown"
-                                println("Rebelio: Detected untrusted identity error for ${newMsg.sender}")
-                                showIdentityChangeAlert(newMsg.sender, contactName)
-                            }
-                            
-                            // Auto-create contact if sender is unknown
-                            if (newMsg.sender != "me" && 
-                                currentContacts.none { it.routingToken == newMsg.sender || it.nickname == newMsg.sender }) {
-                                // Create temporary contact from sender routing token
-                                val shortName = "User-${newMsg.sender.take(6)}"
-                                val newContact = uniffi.rebelio_client.FfiContact(
-                                    nickname = shortName,
-                                    routingToken = newMsg.sender
-                                )
-                                currentContacts.add(newContact)
-                                println("Rebelio: Auto-created contact '$shortName' for unknown sender")
-                                
-                                // Persist contact
-                                viewModelScope.launch {
-                                    repository.addContact(shortName, newMsg.sender)
-                                        .onFailure { e -> println("Rebelio: Failed to persist contact: ${e.message}") }
-                                }
-                            }
-                            
-                            if (receivedMessages.none { it.id == newMsg.id }) {
-                                receivedMessages.add(newMsg)
-                                changed = true
-                                
-                                // Increment unread count for sender
-                                if (newMsg.sender != "me") {
-                                    val count = newUnreadCounts[newMsg.sender] ?: 0
-                                    newUnreadCounts[newMsg.sender] = count + 1
-                                    
-                                    // Only trigger notification if NOT viewing this conversation
-                                    if (currentlyViewingContact != newMsg.sender) {
-                                        viewModelScope.launch {
-                                            _notificationFlow.emit(newMsg)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if (changed) {
-                            val allMessages = receivedMessages + sentMessages
-                            _uiState.value = _uiState.value.copy(
-                                messages = allMessages.sortedBy { it.timestamp },
-                                contacts = currentContacts,
-                                unreadCounts = newUnreadCounts
-                            )
-                        }
-                    }
-                    
-                    // Sync status updates for sent messages
-                    syncSentMessageStatuses()
-                }
-                kotlinx.coroutines.delay(2000) // Poll every 2 seconds
+    private fun startRealtimeMessaging() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                println("Rebelio: Starting WebSocket...")
+                uniffi.rebelio_client.startRealtimeMessaging()
+                startLocalRefresh()
+            } catch (e: Exception) {
+                println("Rebelio: Failed to start realtime messaging: ${e.message}")
             }
         }
+    }
+    
+    private fun startLocalRefresh() {
+        if (isPolling) return
+        isPolling = true
+        println("Rebelio: Local polling started")
+        viewModelScope.launch {
+            while (isPolling) {
+                // UI is updated from local DB which is updated by background WS thread
+                loadData()
+                kotlinx.coroutines.delay(2000) // Refresh UI every 2s
+            }
+        }
+    }
+    
+    fun stopPolling() {
+        isPolling = false
+        // Optional: stop background service if app is truly backgrounded
+        // But for better UX we might want to keep it
     }
     
     /**
@@ -508,6 +441,15 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
              
              // Reset UI state
              _uiState.value = AppState() // Reset to default (isRegistered=false)
+             
+             // Stop WebSocket
+             kotlinx.coroutines.Dispatchers.IO.let {
+                 try {
+                     uniffi.rebelio_client.stopRealtimeMessaging()
+                 } catch (e: Exception) {
+                     println("Rebelio: Failed to stop realtime messaging: ${e.message}")
+                 }
+             }
         }
     }
 

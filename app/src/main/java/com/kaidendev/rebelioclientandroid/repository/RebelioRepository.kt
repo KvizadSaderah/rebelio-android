@@ -17,43 +17,15 @@ class RebelioRepository(private val storagePath: String) {
 
     // ... existing methods ...
 
-    // Workaround for NDK persistence issue: Load history.json directly
+    // Load all messages from encrypted database
     fun loadLocalHistory(): List<FfiMessage> {
         return try {
-        val historyFile = java.io.File(storagePath, "history.json")
-        if (!historyFile.exists()) return emptyList()
-
-        val jsonString = historyFile.readText()
-        val json = org.json.JSONObject(jsonString)
-        val messagesMap = json.optJSONObject("messages") ?: return emptyList()
-        
-        val allMessages = mutableListOf<FfiMessage>()
-        
-        messagesMap.keys().forEach { routingToken ->
-            val msgsArray = messagesMap.getJSONArray(routingToken)
-            for (i in 0 until msgsArray.length()) {
-                val msgObj = msgsArray.getJSONObject(i)
-                val isOutgoing = msgObj.optBoolean("is_outgoing")
-                // For outgoing messages, use "me:routingToken" so we know which chat it belongs to
-                // For incoming messages, use the actual sender routing token
-                val sender = if (isOutgoing) "me:$routingToken" else msgObj.optString("sender", routingToken)
-                
-                allMessages.add(FfiMessage(
-                    id = msgObj.optString("id"),
-                    sender = sender,
-                    content = msgObj.optString("content"),
-                    timestamp = msgObj.optLong("timestamp"),
-                    isEncrypted = msgObj.optBoolean("is_encrypted"),
-                    status = msgObj.optString("status", "sent")
-                ))
-            }
+            uniffi.rebelio_client.getAllMessages()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
-        allMessages.sortedBy { it.timestamp }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        emptyList()
     }
-}
 
     suspend fun registerUser(username: String, serverUrl: String): Result<String> = withContext(Dispatchers.IO) {
         try {
