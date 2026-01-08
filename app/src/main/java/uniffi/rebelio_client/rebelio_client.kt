@@ -741,6 +741,8 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -785,6 +787,8 @@ internal interface UniffiLib : Library {
     fun uniffi_rebelio_client_fn_func_send_group_message(`groupId`: RustBuffer.ByValue,`messageText`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_rebelio_client_fn_func_send_message(`recipientToken`: RustBuffer.ByValue,`messageText`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_rebelio_client_fn_func_trust_identity(`counterparty`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun ffi_rebelio_client_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -928,6 +932,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_rebelio_client_checksum_func_send_message(
     ): Short
+    fun uniffi_rebelio_client_checksum_func_trust_identity(
+    ): Short
     fun ffi_rebelio_client_uniffi_contract_version(
     ): Int
     
@@ -988,6 +994,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_send_message() != 35087.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_trust_identity() != 450.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1866,6 +1875,19 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     uniffiRustCallWithError(RebelioException) { _status ->
     UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_send_message(
         FfiConverterString.lower(`recipientToken`),FfiConverterString.lower(`messageText`),_status)
+}
+    
+    
+
+        /**
+         * Trust a contact's new identity and reset session
+         * Call this when user confirms they trust the new identity key
+         */
+    @Throws(RebelioException::class) fun `trustIdentity`(`counterparty`: kotlin.String)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_trust_identity(
+        FfiConverterString.lower(`counterparty`),_status)
 }
     
     
