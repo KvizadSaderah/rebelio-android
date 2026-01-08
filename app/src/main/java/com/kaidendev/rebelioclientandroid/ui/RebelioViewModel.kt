@@ -337,9 +337,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                     println("Rebelio: Message sent successfully")
                     
                     // Reload history to get correct message ID from persistent storage
-                    val historyMessages = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        repository.loadLocalHistory()
-                    }
+                    val historyMessages = repository.loadLocalHistory()
                     
                     // Find the message we just sent (most recent outgoing to this recipient)
                     val sentMsg = historyMessages.filter { 
