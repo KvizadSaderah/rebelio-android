@@ -187,6 +187,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             is AppScreen.Chat -> {
+                                // Start viewing this contact (suppress notifications)
+                                androidx.compose.runtime.DisposableEffect(screen.contact.routingToken) {
+                                    viewModel.setViewingContact(screen.contact.routingToken)
+                                    onDispose {
+                                        viewModel.setViewingContact(null)
+                                    }
+                                }
+                                
                                 ChatScreen(
                                     contact = screen.contact,
                                     messages = uiState.messages,

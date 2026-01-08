@@ -181,6 +181,13 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
     // Polling mechanism
     private var isPolling = false
     
+    // Track which conversation is currently open (for notification suppression)
+    private var currentlyViewingContact: String? = null
+    
+    fun setViewingContact(contactId: String?) {
+        currentlyViewingContact = contactId
+    }
+    
     fun startAutoRefresh() {
         if (isPolling) return
         isPolling = true
@@ -244,9 +251,11 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                                     val count = newUnreadCounts[newMsg.sender] ?: 0
                                     newUnreadCounts[newMsg.sender] = count + 1
                                     
-                                    // Trigger notification
-                                    viewModelScope.launch {
-                                        _notificationFlow.emit(newMsg)
+                                    // Only trigger notification if NOT viewing this conversation
+                                    if (currentlyViewingContact != newMsg.sender) {
+                                        viewModelScope.launch {
+                                            _notificationFlow.emit(newMsg)
+                                        }
                                     }
                                 }
                             }
@@ -327,18 +336,32 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 .onSuccess { 
                     println("Rebelio: Message sent successfully")
                     
-                    val sentMessage = FfiMessage(
-                        id = java.util.UUID.randomUUID().toString(),
-                        sender = "me:$recipientToken", // Track recipient for proper chat filtering
+                    // Reload history to get correct message ID from persistent storage
+                    val historyMessages = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        repository.loadLocalHistory()
+                    }
+                    
+                    // Find the message we just sent (most recent outgoing to this recipient)
+                    val sentMsg = historyMessages.filter { 
+                        it.sender == "You" || it.sender.startsWith("me:")
+                    }.filter {
+                        it.content == message // Match content
+                    }.maxByOrNull { it.timestamp }
+                    
+                    val messageToAdd = sentMsg ?: FfiMessage(
+                        id = System.currentTimeMillis().toString(), // Fallback: use timestamp as ID
+                        sender = "me:$recipientToken",
                         content = message,
                         timestamp = System.currentTimeMillis() / 1000,
                         isEncrypted = true,
                         status = "sent"
                     )
                     
-                    sentMessages.add(sentMessage)
+                    // Avoid duplicates
+                    if (sentMessages.none { it.id == messageToAdd.id }) {
+                        sentMessages.add(messageToAdd)
+                    }
                     
-                    // Update UI directly without reloading history (avoids duplicates)
                     val allMessages = receivedMessages + sentMessages
                     _uiState.value = _uiState.value.copy(
                         messages = allMessages.sortedBy { it.timestamp },
