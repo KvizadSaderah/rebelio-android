@@ -223,6 +223,14 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                         newInboxMessages.forEach { newMsg ->
                             println("Rebelio: New message from '${newMsg.sender}': ${newMsg.content}")
                             
+                            // Check for decryption failure (untrusted identity) reported as message content
+                            if (newMsg.content.contains("Decryption Failed", ignoreCase = true) && 
+                                newMsg.content.contains("untrusted identity", ignoreCase = true)) {
+                                val contactName = _uiState.value.contacts.find { it.routingToken == newMsg.sender }?.nickname ?: "Unknown"
+                                println("Rebelio: Detected untrusted identity error for ${newMsg.sender}")
+                                showIdentityChangeAlert(newMsg.sender, contactName)
+                            }
+                            
                             // Auto-create contact if sender is unknown
                             if (newMsg.sender != "me" && 
                                 currentContacts.none { it.routingToken == newMsg.sender || it.nickname == newMsg.sender }) {
@@ -336,15 +344,25 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                 .onSuccess { 
                     println("Rebelio: Message sent successfully")
                     
-                    // Reload history to get correct message ID from persistent storage
+                    // Short delay to ensure backend has persisted the message to DB
+                    kotlinx.coroutines.delay(100)
+
+                    // Reload history to get correct message ID from persistent storage (Server ID)
                     val historyMessages = repository.loadLocalHistory()
                     
                     // Find the message we just sent (most recent outgoing to this recipient)
                     val sentMsg = historyMessages.filter { 
-                        it.sender == "You" || it.sender.startsWith("me:")
+                        (it.sender == "You" || it.sender.startsWith("me:"))
                     }.filter {
-                        it.content == message // Match content
+                        // Match content or just take the very last outgoing one
+                        it.content == message 
                     }.maxByOrNull { it.timestamp }
+                    
+                    if (sentMsg != null) {
+                        println("Rebelio: Found sent message in history with ID: ${sentMsg.id}")
+                    } else {
+                        println("Rebelio: WARNING: Could not find sent message in history via content match. Using fallback.")
+                    }
                     
                     val messageToAdd = sentMsg ?: FfiMessage(
                         id = System.currentTimeMillis().toString(), // Fallback: use timestamp as ID

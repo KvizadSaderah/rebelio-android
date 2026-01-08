@@ -39,6 +39,9 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 import uniffi.rebelio_client.FfiMessage
+import com.kaidendev.rebelioclientandroid.utils.UpdateChecker
+import com.kaidendev.rebelioclientandroid.utils.UpdateInfo
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     
@@ -110,6 +113,36 @@ class MainActivity : ComponentActivity() {
                     
                     // Navigation State
                     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Home) }
+                    
+                    // Auto-Update Check
+                    var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    LaunchedEffect(Unit) {
+                        val checker = UpdateChecker()
+                        updateInfo = checker.checkForUpdate()
+                    }
+                    
+                    if (updateInfo != null) {
+                        androidx.compose.material3.AlertDialog(
+                            onDismissRequest = { updateInfo = null },
+                            title = { Text("Update Available") },
+                            text = { Text("New version ${updateInfo!!.version} is available.\n\n${updateInfo!!.releaseNotes}") },
+                            confirmButton = {
+                                androidx.compose.material3.Button(onClick = {
+                                    val checker = UpdateChecker()
+                                    checker.downloadUpdate(context, updateInfo!!.downloadUrl, updateInfo!!.version)
+                                    updateInfo = null
+                                }) {
+                                    Text("Update Now")
+                                }
+                            },
+                            dismissButton = {
+                                androidx.compose.material3.Button(onClick = { updateInfo = null }) {
+                                    Text("Later")
+                                }
+                            }
+                        )
+                    }
                     
                     // Onboarding Flow (First Launch)
                     if (!onboardingCompleted) {
@@ -285,6 +318,25 @@ class MainActivity : ComponentActivity() {
                             confirmButton = {
                                 androidx.compose.material3.Button(onClick = { viewModel.clearError() }) {
                                     Text("OK")
+                                }
+                            }
+                        )
+                    }
+                    
+                    // Identity Change Alert
+                    uiState.identityChangeAlert?.let { alert ->
+                        androidx.compose.material3.AlertDialog(
+                            onDismissRequest = { viewModel.dismissIdentityChangeAlert() },
+                            title = { Text("Identity Changed") },
+                            text = { Text("Security key for ${alert.contactName} has changed.\n\nThis usually happens if they reinstalled the app. However, it could also indicate someone is intercepting your connection.") },
+                            confirmButton = {
+                                androidx.compose.material3.Button(onClick = { viewModel.trustNewIdentity(alert.contactId) }) {
+                                    Text("Trust New Identity")
+                                }
+                            },
+                            dismissButton = {
+                                androidx.compose.material3.Button(onClick = { viewModel.dismissIdentityChangeAlert() }) {
+                                    Text("Block / Cancel")
                                 }
                             }
                         )
