@@ -39,7 +39,7 @@ import com.kaidendev.rebelioclientandroid.ui.theme.MatrixGreen
 import com.kaidendev.rebelioclientandroid.ui.theme.RebelioTypography
 import com.kaidendev.rebelioclientandroid.ui.theme.Spacing
 import uniffi.rebelio_client.FfiMessage
-import com.kaidendev.rebelioclientandroid.model.FfiGroup
+import uniffi.rebelio_client.FfiGroup
 
 @Composable
 fun GroupChatScreen(

@@ -354,7 +354,7 @@ sealed class AppScreen {
     object Settings : AppScreen()
     data class ContactDetails(val contact: uniffi.rebelio_client.FfiContact) : AppScreen()
     object CreateGroup : AppScreen()
-    data class GroupChat(val group: com.kaidendev.rebelioclientandroid.model.FfiGroup) : AppScreen()
+    data class GroupChat(val group: uniffi.rebelio_client.FfiGroup) : AppScreen()
     object MyQr : AppScreen()
     object ScanQr : AppScreen()
 }

@@ -3,7 +3,7 @@ package com.kaidendev.rebelioclientandroid.repository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import uniffi.rebelio_client.*
-import com.kaidendev.rebelioclientandroid.model.FfiGroup
+
 
 
 
@@ -105,9 +105,7 @@ class RebelioRepository(private val storagePath: String) {
 
     suspend fun createGroup(name: String, members: List<String>): Result<String> = withContext(Dispatchers.IO) {
         try {
-            // Mock implementation until NDK is fixed
-            // val groupId = uniffi.rebelio_client.createGroup(name, members)
-            val groupId = java.util.UUID.randomUUID().toString()
+            val groupId = uniffi.rebelio_client.createGroup(name, members)
             Result.success(groupId)
         } catch (e: Exception) {
             Result.failure(e)
@@ -116,9 +114,7 @@ class RebelioRepository(private val storagePath: String) {
 
     suspend fun loadGroups(): Result<List<FfiGroup>> = withContext(Dispatchers.IO) {
         try {
-            // Mock implementation until NDK is fixed
-            // val groups = uniffi.rebelio_client.loadGroups()
-            val groups = listOf<FfiGroup>() // Return empty list or dummy
+            val groups = uniffi.rebelio_client.loadGroups()
             Result.success(groups)
         } catch (e: Exception) {
             Result.failure(e)
@@ -127,9 +123,17 @@ class RebelioRepository(private val storagePath: String) {
 
     suspend fun sendGroupMessage(groupId: String, message: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // Mock implementation until NDK is fixed
-            // uniffi.rebelio_client.sendGroupMessage(groupId, message)
+            uniffi.rebelio_client.sendGroupMessage(groupId, message)
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getSentMessageStatuses(): Result<List<FfiStatusUpdate>> = withContext(Dispatchers.IO) {
+        try {
+            val updates = uniffi.rebelio_client.getSentMessageStatuses()
+            Result.success(updates)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import uniffi.rebelio_client.FfiContact
-import com.kaidendev.rebelioclientandroid.model.FfiGroup
+
 import uniffi.rebelio_client.FfiMessage
 import uniffi.rebelio_client.FfiStatus
 
@@ -228,6 +228,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
             while (isPolling) {
                 // UI is updated from local DB which is updated by background WS thread
                 loadData()
+                syncSentMessageStatuses() // Explicitly check for status updates (sent -> delivered -> read)
                 kotlinx.coroutines.delay(2000) // Refresh UI every 2s
             }
         }
@@ -255,7 +256,8 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
     private fun syncSentMessageStatuses() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                val updates = uniffi.rebelio_client.getSentMessageStatuses()
+                val updatesResult = repository.getSentMessageStatuses()
+                val updates = updatesResult.getOrDefault(emptyList())
                 var changed = false
                 
                 updates.forEach { update ->

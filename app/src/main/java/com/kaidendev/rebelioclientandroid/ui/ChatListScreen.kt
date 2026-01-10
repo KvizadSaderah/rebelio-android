@@ -54,8 +54,8 @@ import com.kaidendev.rebelioclientandroid.ui.theme.RebelioTypography
 import com.kaidendev.rebelioclientandroid.ui.theme.Spacing
 import com.kaidendev.rebelioclientandroid.ui.theme.TextMuted
 import com.kaidendev.rebelioclientandroid.ui.theme.TextPrimary
+import uniffi.rebelio_client.FfiGroup
 import uniffi.rebelio_client.FfiContact
-import com.kaidendev.rebelioclientandroid.model.FfiGroup
 
 @Composable
 fun GroupRow(
