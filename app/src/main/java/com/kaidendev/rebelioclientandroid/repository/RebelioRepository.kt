@@ -94,9 +94,7 @@ class RebelioRepository(private val storagePath: String) {
 
     suspend fun updateContact(oldNickname: String, newNickname: String, routingToken: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // FFI doesn't support update, so we delete and re-add
-            uniffi.rebelio_client.removeContact(oldNickname)
-            uniffi.rebelio_client.addContact(newNickname, routingToken)
+            uniffi.rebelio_client.updateContact(oldNickname, newNickname, routingToken)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
