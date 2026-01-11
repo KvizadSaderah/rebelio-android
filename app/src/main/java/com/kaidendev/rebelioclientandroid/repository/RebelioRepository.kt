@@ -110,6 +110,33 @@ class RebelioRepository(private val storagePath: String) {
         }
     }
 
+    suspend fun addGroupMembers(groupId: String, memberRoutingTokens: List<String>): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            uniffi.rebelio_client.addGroupMembers(groupId, memberRoutingTokens)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun removeGroupMembers(groupId: String, memberIds: List<String>): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            uniffi.rebelio_client.removeGroupMembers(groupId, memberIds)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun leaveGroup(groupId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            uniffi.rebelio_client.leaveGroup(groupId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun loadGroups(): Result<List<FfiGroup>> = withContext(Dispatchers.IO) {
         try {
             val groups = uniffi.rebelio_client.loadGroups()
@@ -132,6 +159,51 @@ class RebelioRepository(private val storagePath: String) {
         try {
             val updates = uniffi.rebelio_client.getSentMessageStatuses()
             Result.success(updates)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun listDevices(): Result<List<FfiDeviceInfo>> = withContext(Dispatchers.IO) {
+        try {
+            val devices = uniffi.rebelio_client.listDevices()
+            Result.success(devices)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun revokeDevice(deviceId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            uniffi.rebelio_client.revokeDevice(deviceId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun registerPushToken(token: String, platform: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            uniffi.rebelio_client.registerPushToken(token, platform)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadBlob(filePath: String, mimeType: String?): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val blobId = uniffi.rebelio_client.uploadBlob(filePath, mimeType)
+            Result.success(blobId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun downloadBlob(blobId: String, destinationPath: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            uniffi.rebelio_client.downloadBlob(blobId, destinationPath)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

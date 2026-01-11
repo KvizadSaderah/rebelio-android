@@ -14,6 +14,8 @@ import uniffi.rebelio_client.FfiContact
 
 import uniffi.rebelio_client.FfiMessage
 import uniffi.rebelio_client.FfiStatus
+import uniffi.rebelio_client.FfiGroup
+import uniffi.rebelio_client.FfiDeviceInfo
 
 data class AppState(
     val isRegistered: Boolean = false,
@@ -22,6 +24,7 @@ data class AppState(
     val myRoutingToken: String? = null,
     val contacts: List<FfiContact> = emptyList(),
     val groups: List<FfiGroup> = emptyList(),
+    val devices: List<FfiDeviceInfo> = emptyList(),
     val messages: List<FfiMessage> = emptyList(),
     val error: String? = null,
     val isLoading: Boolean = false,
@@ -82,6 +85,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
         viewModelScope.launch {
             val contactsResult = repository.loadContacts()
             val groupsResult = repository.loadGroups()
+            val devicesResult = repository.listDevices()
             
             // Workaround: Load persistent history
             val historyMessages = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -127,6 +131,7 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
             _uiState.value = _uiState.value.copy(
                 contacts = contactsResult.getOrDefault(emptyList()),
                 groups = groupsResult.getOrDefault(emptyList()),
+                devices = devicesResult.getOrDefault(emptyList()),
                 messages = allMessages.sortedBy { it.timestamp }
             )
         }
@@ -192,6 +197,23 @@ class RebelioViewModel(private val repository: RebelioRepository) : ViewModel() 
                      _uiState.value = _uiState.value.copy(isLoading = false) 
                 }
                 .onFailure { e -> _uiState.value = _uiState.value.copy(isLoading = false, error = e.message) }
+        }
+    }
+
+    fun revokeDevice(deviceId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            repository.revokeDevice(deviceId)
+                .onSuccess { loadData(); _uiState.value = _uiState.value.copy(isLoading = false) }
+                .onFailure { e -> _uiState.value = _uiState.value.copy(isLoading = false, error = e.message) }
+        }
+    }
+
+    fun registerPush(token: String) {
+        viewModelScope.launch {
+             // Platform is fixed to "android" or "fcm" for now
+             repository.registerPushToken(token, "fcm")
+                 .onFailure { e -> println("Rebelio: Failed to register push: ${e.message}") }
         }
     }
 
