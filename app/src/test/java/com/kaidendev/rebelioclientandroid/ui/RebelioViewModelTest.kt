@@ -31,6 +31,7 @@ class RebelioViewModelTest {
         coEvery { repository.getStatus() } returns Result.success(FfiStatus(false, "", "", ""))
         coEvery { repository.loadContacts() } returns Result.success(emptyList())
         coEvery { repository.loadGroups() } returns Result.success(emptyList())
+        coEvery { repository.listDevices() } returns Result.success(emptyList())
         coEvery { repository.getInboxMessages() } returns Result.success(emptyList())
         coEvery { repository.loadLocalHistory() } returns emptyList() // Not suspend, direct call? Actually loadLocalHistory is used inside loadData
     }
@@ -91,6 +92,7 @@ class RebelioViewModelTest {
         )
         coEvery { repository.getInboxMessages() } returns Result.success(emptyList())
         coEvery { repository.loadGroups() } returns Result.success(emptyList())
+        coEvery { repository.listDevices() } returns Result.success(emptyList())
 
         viewModel.uiState.test {
             // StateFlow emits current value immediately. 
@@ -128,6 +130,7 @@ class RebelioViewModelTest {
         coEvery { repository.loadContacts() } returns Result.success(listOf(FfiContact(newName, token)))
         coEvery { repository.getInboxMessages() } returns Result.success(emptyList())
         coEvery { repository.loadGroups() } returns Result.success(emptyList())
+        coEvery { repository.listDevices() } returns Result.success(emptyList())
 
         viewModel.uiState.test {
             awaitItem() // Initial
