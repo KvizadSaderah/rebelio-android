@@ -105,7 +105,8 @@ jobs:
         
         echo "📥 Downloading $VERSION from $CLIENT_LIB_REPO..."
         
-        # Create download directory
+        # Clean and create download directory
+        rm -rf downloaded
         mkdir -p downloaded
         
         # Download release asset
@@ -115,6 +116,7 @@ jobs:
           --dir ./downloaded
         
         # Extract
+        rm -rf extracted
         mkdir -p extracted
         unzip ./downloaded/android-libs-*.zip -d ./extracted
         
