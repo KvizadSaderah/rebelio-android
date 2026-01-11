@@ -751,6 +751,24 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -768,8 +786,12 @@ internal interface UniffiLib : Library {
 
     fun uniffi_rebelio_client_fn_func_add_contact(`nickname`: RustBuffer.ByValue,`routingToken`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_rebelio_client_fn_func_add_group_members(`groupId`: RustBuffer.ByValue,`memberRoutingTokens`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_rebelio_client_fn_func_create_group(`name`: RustBuffer.ByValue,`members`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_rebelio_client_fn_func_download_blob(`blobId`: RustBuffer.ByValue,`destinationPath`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_rebelio_client_fn_func_export_identity(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_get_all_messages(uniffi_out_err: UniffiRustCallStatus, 
@@ -786,15 +808,25 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_rebelio_client_fn_func_init_sdk(`storagePath`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_rebelio_client_fn_func_leave_group(`groupId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_rebelio_client_fn_func_list_devices(uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_load_contacts(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_load_groups(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_mark_messages_read(`messageIds`: RustBuffer.ByValue,`routingToken`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_rebelio_client_fn_func_register_push_token(`pushToken`: RustBuffer.ByValue,`platform`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_rebelio_client_fn_func_register_user(`username`: RustBuffer.ByValue,`serverUrl`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_rebelio_client_fn_func_remove_contact(`nickname`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_rebelio_client_fn_func_remove_group_members(`groupId`: RustBuffer.ByValue,`memberIds`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_rebelio_client_fn_func_revoke_device(`deviceId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_rebelio_client_fn_func_send_group_message(`groupId`: RustBuffer.ByValue,`messageText`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -806,6 +838,10 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_rebelio_client_fn_func_trust_identity(`counterparty`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_rebelio_client_fn_func_update_contact(`oldNickname`: RustBuffer.ByValue,`newNickname`: RustBuffer.ByValue,`routingToken`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_rebelio_client_fn_func_upload_blob(`filePath`: RustBuffer.ByValue,`mimeType`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun ffi_rebelio_client_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_rebelio_client_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -920,7 +956,11 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_rebelio_client_checksum_func_add_contact(
     ): Short
+    fun uniffi_rebelio_client_checksum_func_add_group_members(
+    ): Short
     fun uniffi_rebelio_client_checksum_func_create_group(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_download_blob(
     ): Short
     fun uniffi_rebelio_client_checksum_func_export_identity(
     ): Short
@@ -938,15 +978,25 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_rebelio_client_checksum_func_init_sdk(
     ): Short
+    fun uniffi_rebelio_client_checksum_func_leave_group(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_list_devices(
+    ): Short
     fun uniffi_rebelio_client_checksum_func_load_contacts(
     ): Short
     fun uniffi_rebelio_client_checksum_func_load_groups(
     ): Short
     fun uniffi_rebelio_client_checksum_func_mark_messages_read(
     ): Short
+    fun uniffi_rebelio_client_checksum_func_register_push_token(
+    ): Short
     fun uniffi_rebelio_client_checksum_func_register_user(
     ): Short
     fun uniffi_rebelio_client_checksum_func_remove_contact(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_remove_group_members(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_revoke_device(
     ): Short
     fun uniffi_rebelio_client_checksum_func_send_group_message(
     ): Short
@@ -957,6 +1007,10 @@ internal interface UniffiLib : Library {
     fun uniffi_rebelio_client_checksum_func_stop_realtime_messaging(
     ): Short
     fun uniffi_rebelio_client_checksum_func_trust_identity(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_update_contact(
+    ): Short
+    fun uniffi_rebelio_client_checksum_func_upload_blob(
     ): Short
     fun ffi_rebelio_client_uniffi_contract_version(
     ): Int
@@ -978,7 +1032,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_rebelio_client_checksum_func_add_contact() != 27886.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_rebelio_client_checksum_func_add_group_members() != 60516.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_rebelio_client_checksum_func_create_group() != 646.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_download_blob() != 42792.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_export_identity() != 14521.toShort()) {
@@ -1005,6 +1065,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_rebelio_client_checksum_func_init_sdk() != 62688.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_rebelio_client_checksum_func_leave_group() != 37884.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_list_devices() != 32477.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_rebelio_client_checksum_func_load_contacts() != 36445.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1014,10 +1080,19 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_rebelio_client_checksum_func_mark_messages_read() != 21495.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_rebelio_client_checksum_func_register_push_token() != 26553.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_rebelio_client_checksum_func_register_user() != 35952.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_remove_contact() != 42368.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_remove_group_members() != 41453.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_revoke_device() != 62723.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_send_group_message() != 37178.toShort()) {
@@ -1033,6 +1108,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_rebelio_client_checksum_func_trust_identity() != 450.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_update_contact() != 36695.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_rebelio_client_checksum_func_upload_blob() != 25624.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1217,6 +1298,57 @@ public object FfiConverterTypeFfiContact: FfiConverterRustBuffer<FfiContact> {
     override fun write(value: FfiContact, buf: ByteBuffer) {
             FfiConverterString.write(value.`nickname`, buf)
             FfiConverterString.write(value.`routingToken`, buf)
+    }
+}
+
+
+
+/**
+ * FFI-safe device info
+ */
+data class FfiDeviceInfo (
+    var `deviceId`: kotlin.String, 
+    var `deviceName`: kotlin.String?, 
+    var `deviceType`: kotlin.String?, 
+    var `isPrimary`: kotlin.Boolean, 
+    var `createdAt`: kotlin.String, 
+    var `lastSeen`: kotlin.String
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiDeviceInfo: FfiConverterRustBuffer<FfiDeviceInfo> {
+    override fun read(buf: ByteBuffer): FfiDeviceInfo {
+        return FfiDeviceInfo(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FfiDeviceInfo) = (
+            FfiConverterString.allocationSize(value.`deviceId`) +
+            FfiConverterOptionalString.allocationSize(value.`deviceName`) +
+            FfiConverterOptionalString.allocationSize(value.`deviceType`) +
+            FfiConverterBoolean.allocationSize(value.`isPrimary`) +
+            FfiConverterString.allocationSize(value.`createdAt`) +
+            FfiConverterString.allocationSize(value.`lastSeen`)
+    )
+
+    override fun write(value: FfiDeviceInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`deviceId`, buf)
+            FfiConverterOptionalString.write(value.`deviceName`, buf)
+            FfiConverterOptionalString.write(value.`deviceType`, buf)
+            FfiConverterBoolean.write(value.`isPrimary`, buf)
+            FfiConverterString.write(value.`createdAt`, buf)
+            FfiConverterString.write(value.`lastSeen`, buf)
     }
 }
 
@@ -1647,6 +1779,34 @@ public object FfiConverterSequenceTypeFfiContact: FfiConverterRustBuffer<List<Ff
 /**
  * @suppress
  */
+public object FfiConverterSequenceTypeFfiDeviceInfo: FfiConverterRustBuffer<List<FfiDeviceInfo>> {
+    override fun read(buf: ByteBuffer): List<FfiDeviceInfo> {
+        val len = buf.getInt()
+        return List<FfiDeviceInfo>(len) {
+            FfiConverterTypeFfiDeviceInfo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<FfiDeviceInfo>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeFfiDeviceInfo.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<FfiDeviceInfo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeFfiDeviceInfo.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeFfiGroup: FfiConverterRustBuffer<List<FfiGroup>> {
     override fun read(buf: ByteBuffer): List<FfiGroup> {
         val len = buf.getInt()
@@ -1737,6 +1897,18 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     
 
         /**
+         * Add members to a group
+         */
+    @Throws(RebelioException::class) fun `addGroupMembers`(`groupId`: kotlin.String, `memberRoutingTokens`: List<kotlin.String>)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_add_group_members(
+        FfiConverterString.lower(`groupId`),FfiConverterSequenceString.lower(`memberRoutingTokens`),_status)
+}
+    
+    
+
+        /**
          * Create a group
          */
     @Throws(RebelioException::class) fun `createGroup`(`name`: kotlin.String, `members`: List<kotlin.String>): kotlin.String {
@@ -1747,6 +1919,18 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
 }
     )
     }
+    
+
+        /**
+         * Download a blob to a file
+         */
+    @Throws(RebelioException::class) fun `downloadBlob`(`blobId`: kotlin.String, `destinationPath`: kotlin.String)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_download_blob(
+        FfiConverterString.lower(`blobId`),FfiConverterString.lower(`destinationPath`),_status)
+}
+    
     
 
         /**
@@ -1856,6 +2040,31 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     
 
         /**
+         * Leave a group
+         */
+    @Throws(RebelioException::class) fun `leaveGroup`(`groupId`: kotlin.String)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_leave_group(
+        FfiConverterString.lower(`groupId`),_status)
+}
+    
+    
+
+        /**
+         * List linked devices
+         */
+    @Throws(RebelioException::class) fun `listDevices`(): List<FfiDeviceInfo> {
+            return FfiConverterSequenceTypeFfiDeviceInfo.lift(
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_list_devices(
+        _status)
+}
+    )
+    }
+    
+
+        /**
          * Load contacts
          */
     @Throws(RebelioException::class) fun `loadContacts`(): List<FfiContact> {
@@ -1894,6 +2103,18 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     
 
         /**
+         * Register push token
+         */
+    @Throws(RebelioException::class) fun `registerPushToken`(`pushToken`: kotlin.String, `platform`: kotlin.String)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_register_push_token(
+        FfiConverterString.lower(`pushToken`),FfiConverterString.lower(`platform`),_status)
+}
+    
+    
+
+        /**
          * Register a new user with the server
          */
     @Throws(RebelioException::class) fun `registerUser`(`username`: kotlin.String, `serverUrl`: kotlin.String): kotlin.String {
@@ -1914,6 +2135,30 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
     uniffiRustCallWithError(RebelioException) { _status ->
     UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_remove_contact(
         FfiConverterString.lower(`nickname`),_status)
+}
+    
+    
+
+        /**
+         * Remove members from a group
+         */
+    @Throws(RebelioException::class) fun `removeGroupMembers`(`groupId`: kotlin.String, `memberIds`: List<kotlin.String>)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_remove_group_members(
+        FfiConverterString.lower(`groupId`),FfiConverterSequenceString.lower(`memberIds`),_status)
+}
+    
+    
+
+        /**
+         * Revoke a device
+         */
+    @Throws(RebelioException::class) fun `revokeDevice`(`deviceId`: kotlin.String)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_revoke_device(
+        FfiConverterString.lower(`deviceId`),_status)
 }
     
     
@@ -1978,6 +2223,31 @@ public object FfiConverterSequenceTypeFfiStatusUpdate: FfiConverterRustBuffer<Li
         FfiConverterString.lower(`counterparty`),_status)
 }
     
+    
+
+        /**
+         * Update a contact
+         */
+    @Throws(RebelioException::class) fun `updateContact`(`oldNickname`: kotlin.String, `newNickname`: kotlin.String, `routingToken`: kotlin.String)
+        = 
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_update_contact(
+        FfiConverterString.lower(`oldNickname`),FfiConverterString.lower(`newNickname`),FfiConverterString.lower(`routingToken`),_status)
+}
+    
+    
+
+        /**
+         * Upload a file as a blob
+         */
+    @Throws(RebelioException::class) fun `uploadBlob`(`filePath`: kotlin.String, `mimeType`: kotlin.String?): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCallWithError(RebelioException) { _status ->
+    UniffiLib.INSTANCE.uniffi_rebelio_client_fn_func_upload_blob(
+        FfiConverterString.lower(`filePath`),FfiConverterOptionalString.lower(`mimeType`),_status)
+}
+    )
+    }
     
 
 
